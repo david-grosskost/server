@@ -1,0 +1,3 @@
+# Follow `. "$(dirname "$0")/../lib.sh"` relative to each script's folder.
+source-path=SCRIPTDIR
+external-sources=true

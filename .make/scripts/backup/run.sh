@@ -8,9 +8,14 @@
 # Caches that SuiteCRM rebuilds are not saved either. Only the content of
 # these directories is left out: restored, they exist, empty, with their owner.
 #
-# Run each night by the systemd timer (make backup@schedule).
+# Run each night by the systemd timer (make backup@schedule), tagged nightly.
+# Run by each deployment too (suitecrm-devkit deploy.yml), just before the
+# version changes: tagged pre-deploy, without the retention and the check,
+# left to the nightly run (quicker, and never blocked by its lock).
+# Retention applies to each tag on its own: pre-deploy snapshots never push
+# nightly ones out, nor the reverse.
 #
-# @usage make backup@run
+# @usage make backup@run [BACKUP_TAG=pre-deploy] [BACKUP_MAINTENANCE=0]
 set -euo pipefail
 . "$(dirname "$0")/../lib.sh"
 
@@ -34,6 +39,10 @@ dump_database () {
   mv "$file.tmp" "$file"
 }
 
+BACKUP_TAG="${BACKUP_TAG:-nightly}"
+BACKUP_MAINTENANCE="${BACKUP_MAINTENANCE:-1}"
+[[ $BACKUP_TAG =~ ^[a-z0-9-]+$ ]] || die "backup@run : BACKUP_TAG invalide : $BACKUP_TAG"
+
 started="$(date +%s)"
 printf '\n  Sauvegarde de %s (%s)\n\n' "$BACKUP_SOURCE" "$(date '+%F %T')"
 
@@ -47,14 +56,19 @@ done < <(docker ps --format '{{.Names}} {{.Image}}')
 info "$databases base(s) exportée(s) dans $BACKUP_DUMP_DIR/."
 
 restic_run backup "$BACKUP_SOURCE" \
-  --tag nightly \
+  --tag "$BACKUP_TAG" \
   --exclude "$BACKUP_DIR" \
   --exclude "$BACKUP_SOURCE/**/data/db/*" \
   --exclude "$BACKUP_SOURCE/**/data/app/cache/*" \
   --exclude "$BACKUP_SOURCE/**/data/app/public/legacy/cache/*" \
   --exclude-caches
 
-restic_run forget --prune \
+if [ "$BACKUP_MAINTENANCE" = 0 ]; then
+  info "Sauvegarde $BACKUP_TAG terminée en $(( $(date +%s) - started )) s (rétention et vérification : la nuit)."
+  exit 0
+fi
+
+restic_run forget --prune --group-by host,paths,tags \
   --keep-daily "$BACKUP_KEEP_DAILY" \
   --keep-weekly "$BACKUP_KEEP_WEEKLY" \
   --keep-monthly "$BACKUP_KEEP_MONTHLY"

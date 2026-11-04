@@ -2,7 +2,7 @@
 
 BACKUP_SCRIPTS := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))/scripts
 
-.PHONY: backup@init backup@run backup@snapshots backup@schedule backup@logs
+.PHONY: backup@init backup@run backup@snapshots backup@schedule backup@logs backup@restore
 
 backup@init:
 	@$(BACKUP_SCRIPTS)/backup/init.sh
@@ -18,3 +18,6 @@ backup@schedule:
 
 backup@logs:
 	@$(BACKUP_SCRIPTS)/backup/logs.sh
+
+backup@restore:
+	@$(BACKUP_SCRIPTS)/backup/restore.sh

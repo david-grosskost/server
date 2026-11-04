@@ -9,9 +9,14 @@ SCRIPTS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # environment, e.g. BACKUP_SOURCE=/tmp/test make backup@run.
 # restic runs in Docker: nothing to install on the server, same version everywhere.
 RESTIC_IMAGE="${RESTIC_IMAGE:-restic/restic:0.19.1}"
-# What is backed up, and where the restic repository lives (excluded from the backup).
+# What is backed up, and the backup directory (excluded from the backup):
+# the restic repository, and the restorations in progress (make backup@restore).
 BACKUP_SOURCE="${BACKUP_SOURCE:-/srv}"
-BACKUP_REPOSITORY="${BACKUP_REPOSITORY:-/srv/backups/restic}"
+BACKUP_DIR="${BACKUP_DIR:-$BACKUP_SOURCE/backups}"
+BACKUP_REPOSITORY="${BACKUP_REPOSITORY:-$BACKUP_DIR/restic}"
+BACKUP_RESTORE_DIR="${BACKUP_RESTORE_DIR:-$BACKUP_DIR/restore}"
+# SuiteCRM instances (make backup@restore): one directory per instance.
+SUITECRM_DIR="${SUITECRM_DIR:-$BACKUP_SOURCE/suitecrm}"
 # Kept snapshots: the last 7 days, then 1 per week for 4 weeks, then 1 per month for 12 months.
 BACKUP_KEEP_DAILY="${BACKUP_KEEP_DAILY:-7}"
 BACKUP_KEEP_WEEKLY="${BACKUP_KEEP_WEEKLY:-4}"
@@ -47,6 +52,9 @@ run () {
   "$@"
 }
 
+# Extra docker run arguments of the next restic_run calls (e.g. a mount).
+RESTIC_DOCKER_ARGS=()
+
 # Runs restic in Docker, on the repository of BACKUP_REPOSITORY.
 # The source is mounted read-only at the same path, so snapshots show the
 # real paths (/srv/...). The container takes the machine's name: restic
@@ -66,5 +74,6 @@ restic_run () {
     -e RESTIC_REPOSITORY=/repo \
     -e RESTIC_PASSWORD_FILE=/run/secrets/restic-password \
     -e RESTIC_CACHE_DIR=/cache \
+    "${RESTIC_DOCKER_ARGS[@]}" \
     "$RESTIC_IMAGE" "$@"
 }

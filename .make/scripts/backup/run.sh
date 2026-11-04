@@ -5,7 +5,8 @@
 #
 # The raw database files (data/db) are not saved: copied while MariaDB runs,
 # they may be unusable. The dumps (data/dumps of this project) replace them.
-# Caches that SuiteCRM rebuilds are not saved either.
+# Caches that SuiteCRM rebuilds are not saved either. Only the content of
+# these directories is left out: restored, they exist, empty, with their owner.
 #
 # Run each night by the systemd timer (make backup@schedule).
 #
@@ -47,10 +48,10 @@ info "$databases base(s) exportée(s) dans $BACKUP_DUMP_DIR/."
 
 restic_run backup "$BACKUP_SOURCE" \
   --tag nightly \
-  --exclude "$BACKUP_REPOSITORY" \
-  --exclude "$BACKUP_SOURCE/**/data/db" \
-  --exclude "$BACKUP_SOURCE/**/data/app/cache" \
-  --exclude "$BACKUP_SOURCE/**/data/app/public/legacy/cache" \
+  --exclude "$BACKUP_DIR" \
+  --exclude "$BACKUP_SOURCE/**/data/db/*" \
+  --exclude "$BACKUP_SOURCE/**/data/app/cache/*" \
+  --exclude "$BACKUP_SOURCE/**/data/app/public/legacy/cache/*" \
   --exclude-caches
 
 restic_run forget --prune \

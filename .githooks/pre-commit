@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Runs every check of .githooks/pre-commit.d/, then rejects the commit if
+# any of them failed. All checks run, so every problem is reported at once.
+# Enabled by: make git@hooks
+#
+# @param string $1 --all to check every tracked file instead of the staged ones (CI)
+set -uo pipefail
+
+failed=0
+for check in "$(dirname "$0")"/pre-commit.d/*.sh; do
+  [ -f "$check" ] || continue
+  bash "$check" "$@" || failed=1
+done
+
+exit "$failed"

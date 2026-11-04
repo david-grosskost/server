@@ -1,0 +1,2 @@
+# Force LF everywhere: bash scripts and the Makefile break with CRLF.
+* text=auto eol=lf

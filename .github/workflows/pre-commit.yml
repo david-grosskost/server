@@ -1,0 +1,24 @@
+# Runs .githooks/pre-commit (every check of pre-commit.d/) on every tracked
+# file, so that commits made without the local hook (web UI, other clone…)
+# are checked too.
+name: Pre-commit Checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install gitleaks and shellcheck
+        run: |
+          .make/scripts/git/gitleaks.sh
+          .make/scripts/git/shellcheck.sh
+
+      - name: Run pre-commit checks
+        run: .githooks/pre-commit --all

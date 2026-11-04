@@ -1,0 +1,8 @@
+# Project tools (make git@gitleaks, make git@shellcheck)
+/.tools/
+
+# Generated secrets (make backup@init): never committed
+/secrets/
+
+# Database dumps and restic cache (make backup@run)
+/data/

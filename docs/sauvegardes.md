@@ -24,9 +24,29 @@ sauvegardée avec le reste. Une nouvelle instance est donc prise en compte toute
 Les identifiants sont lus à l'intérieur du conteneur : ils ne sont ni affichés, ni
 écrits sur le serveur.
 
+## Avant chaque déploiement
+
+Chaque déploiement d'une instance SuiteCRM (workflow `deploy.yml` du devkit) lance d'abord,
+sur le serveur :
+
+```bash
+make -C /srv/server backup@run BACKUP_TAG=pre-deploy BACKUP_MAINTENANCE=0
+```
+
+Une sauvegarde complète, marquée `pre-deploy`, juste avant le changement de version : si la
+nouvelle version abîme les données, `make backup@restore INSTANCE=<instance> SNAPSHOT=<id>`
+remet l'instance exactement comme avant le déploiement. L'identifiant de la sauvegarde est
+affiché dans le résumé du déploiement sur GitHub. Si la sauvegarde échoue, le déploiement
+n'a pas lieu.
+
+Le retour arrière automatique (smoke test en échec) ne remet que le code : écraser la base
+sans décision humaine ferait perdre ce qui a été saisi entre-temps. La restauration reste
+donc un choix, avec cette sauvegarde toute prête.
+
 ## Rétention
 
-Après chaque sauvegarde, restic garde :
+Après chaque sauvegarde nocturne, restic garde, séparément pour les sauvegardes `nightly`
+et `pre-deploy` :
 
 - une sauvegarde par jour pendant **7 jours** ;
 - une par semaine pendant **4 semaines** ;
@@ -39,7 +59,7 @@ Les autres sont supprimées, puis le dépôt est vérifié (`restic check`).
 | Commande | Rôle |
 |---|---|
 | `make backup@init` | une fois par serveur : génère le mot de passe (`secrets/restic-password`) et crée le dépôt |
-| `make backup@run` | sauvegarde maintenant (dumps, sauvegarde, rétention, vérification) |
+| `make backup@run` | sauvegarde maintenant (dumps, sauvegarde, rétention, vérification) ; `BACKUP_TAG=…` change l'étiquette (`nightly` par défaut), `BACKUP_MAINTENANCE=0` saute la rétention et la vérification |
 | `make backup@snapshots` | liste les sauvegardes et la taille du dépôt |
 | `make backup@schedule` | programme la sauvegarde chaque nuit (timer systemd `srv-backup`, demande `sudo`) |
 | `make backup@logs` | journal des dernières sauvegardes et date de la prochaine |

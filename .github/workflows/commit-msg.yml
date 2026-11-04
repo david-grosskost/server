@@ -2,8 +2,9 @@
 # without the local hook (web UI, other clone…) are checked too.
 name: Commit Messages
 
+# Pull requests only: main only receives merged pull requests whose checks
+# passed, so running them again on each push would be redundant.
 on:
-  push:
   pull_request:
 
 jobs:

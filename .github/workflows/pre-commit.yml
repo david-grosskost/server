@@ -3,8 +3,9 @@
 # are checked too.
 name: Pre-commit Checks
 
+# Pull requests only: main only receives merged pull requests whose checks
+# passed, so running them again on each push would be redundant.
 on:
-  push:
   pull_request:
 
 jobs:

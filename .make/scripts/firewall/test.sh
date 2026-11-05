@@ -11,11 +11,13 @@ set -euo pipefail
 target="$FIREWALL_TEST_HOST:$FIREWALL_TEST_PORT"
 
 # Prints the greeting of the mail server (220 …), empty if not reached.
+# nc's input stays open 3 seconds: with an empty input, nc quits before the
+# server has greeted.
 #
 # @param string $@ Extra docker run arguments (e.g. the network)
 greeting () {
   docker run --rm "$@" "$FIREWALL_TEST_IMAGE" \
-    timeout 10 nc "$FIREWALL_TEST_HOST" "$FIREWALL_TEST_PORT" </dev/null 2>/dev/null \
+    sh -c "sleep 3 | timeout 10 nc $FIREWALL_TEST_HOST $FIREWALL_TEST_PORT" 2>/dev/null \
     | tr -d '\r' | grep -m1 '^220' || true
 }
 

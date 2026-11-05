@@ -1,0 +1,12 @@
+# Opens a pull request when a newer version of a GitHub Action is released,
+# every week. The restic and busybox images, pinned in .make/scripts/lib.sh,
+# are not seen by Dependabot: they are updated by hand.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+      include: scope

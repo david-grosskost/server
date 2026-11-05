@@ -43,10 +43,16 @@ BACKUP_TAG="${BACKUP_TAG:-nightly}"
 BACKUP_MAINTENANCE="${BACKUP_MAINTENANCE:-1}"
 [[ $BACKUP_TAG =~ ^[a-z0-9-]+$ ]] || die "backup@run : BACKUP_TAG invalide : $BACKUP_TAG"
 
+# Files stay writable by the docker group: the next backup may run as
+# another user (nightly: the server user, before a deployment: deploy).
+umask 002
+mkdir -p "$BACKUP_DUMP_DIR"
+[ -w "$BACKUP_DUMP_DIR" ] \
+  || die "backup@run : $BACKUP_DUMP_DIR non modifiable par $(id -un) → make backup@init (partage data/ avec le groupe docker)"
+
 started="$(date +%s)"
 printf '\n  Sauvegarde de %s (%s)\n\n' "$BACKUP_SOURCE" "$(date '+%F %T')"
 
-mkdir -p "$BACKUP_DUMP_DIR"
 databases=0
 while read -r name image; do
   case $image in

@@ -6,6 +6,8 @@ name: Commit Messages
 # passed, so running them again on each push would be redundant.
 on:
   pull_request:
+    # edited: a corrected pull request title is checked again.
+    types: [opened, synchronize, reopened, edited]
 
 jobs:
   commit-msg:
@@ -44,3 +46,17 @@ jobs:
             fi
           done
           exit "$failed"
+
+      - name: Check the pull request title
+        # Squash merge: the title becomes the commit message on main, the one
+        # release-please reads. Checked like a commit message.
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          msg="$(mktemp)"
+          printf '%s\n' "$PR_TITLE" > "$msg"
+          if ! ".githooks/commit-msg" "$msg"; then
+            echo "::error::titre de la pull request non conforme : il devient le message du commit sur main"
+            exit 1
+          fi

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Rejects a commit whose shell scripts (*.sh and .githooks/*) are broken:
-# not executable in Git, wrong first line, or leftover conflict markers.
+# wrong first line or leftover conflict markers. A staged script that is not
+# executable in Git (Windows loses the bit) is made executable in the commit,
+# with a message: nothing to remember. In the CI (--all), it is an error.
 # Checks what is staged, not the working tree. lib.sh is sourced, never
 # executed: only the conflict markers are checked in it.
 # Run by .githooks/pre-commit.
@@ -29,8 +31,14 @@ while IFS= read -r file; do
 
   if [ "$(basename "$file")" != lib.sh ]; then
     mode="$(git ls-files -s -- "$file" | cut -d' ' -f1)"
-    [ "$mode" = 100755 ] \
-      || fail "$file" "non exécutable dans Git ($mode) → git update-index --chmod=+x $file"
+    if [ "$mode" != 100755 ]; then
+      if [ "${1:-}" = --all ]; then
+        fail "$file" "non exécutable dans Git ($mode) → make git@chmod"
+      else
+        git update-index --chmod=+x -- "$file"
+        printf 'pre-commit : %s rendu exécutable dans le commit\n' "$file" >&2
+      fi
+    fi
 
     first="$(git show ":$file" | head -n1 | tr -d '\r')"
     [ "$first" = "$SHEBANG" ] \

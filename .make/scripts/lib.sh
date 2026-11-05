@@ -30,6 +30,24 @@ BACKUP_CACHE_DIR="data/restic-cache"
 # systemd service and timer of the nightly backup (make backup@schedule).
 BACKUP_UNIT="srv-backup"
 
+# Outgoing SMTP firewall (make firewall@*), see docs/pare-feu.md. Every
+# container is refused the SMTP ports, except those of the smtp-out network,
+# which only the prod instances join (their compose.prod.yaml).
+FIREWALL_NETWORK="smtp-out"
+# Outside Docker's default address pools (172.17-31.x, 192.168.x): never
+# taken by another network. Fixed: the firewall rule names it.
+FIREWALL_SUBNET="10.25.0.0/24"
+# SMTP, SMTPS, submission, and the port some providers offer besides.
+FIREWALL_SMTP_PORTS="25,465,587,2525"
+# Marks our rules in the DOCKER-USER chain: removed and added again as a whole.
+FIREWALL_TAG="srv-smtp"
+# systemd service that applies the rules after each start of Docker.
+FIREWALL_UNIT="srv-firewall"
+# Throwaway container of make firewall@test, and the public server it tries.
+FIREWALL_TEST_IMAGE="busybox:1.37.0"
+FIREWALL_TEST_HOST="${FIREWALL_TEST_HOST:-smtp.gmail.com}"
+FIREWALL_TEST_PORT="${FIREWALL_TEST_PORT:-587}"
+
 # Prints an error and exits.
 #
 # @param string $* Message

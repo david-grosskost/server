@@ -2,7 +2,8 @@
 
 Administration du serveur qui héberge les projets (`/srv`), à part du code des projets eux-mêmes.
 Pour l'instant : les **sauvegardes** de tout `/srv`, chaque nuit, avec
-[restic](https://restic.net/).
+[restic](https://restic.net/), et le **pare-feu SMTP** : seules les instances de prod
+peuvent envoyer des e-mails vers l'extérieur.
 
 | Dossier du serveur | Contenu |
 |---|---|
@@ -13,7 +14,7 @@ Pour l'instant : les **sauvegardes** de tout `/srv`, chaque nuit, avec
 
 ## Prérequis
 
-- un serveur Linux avec systemd, Docker, Git et `make`
+- un serveur Linux avec systemd, Docker (28 ou plus), Git et `make`
 - un utilisateur membre du groupe `docker`, avec `sudo`
 
 restic tourne dans Docker, dans une version fixée : rien d'autre à installer.
@@ -27,6 +28,8 @@ cd /srv/server
 make backup@init       # mot de passe + dépôt restic
 make backup@run        # première sauvegarde
 make backup@schedule   # puis chaque nuit
+make firewall@install  # SMTP sortant réservé aux instances de prod
+make firewall@test
 ```
 
 `make` sans argument liste toutes les commandes disponibles.
@@ -36,6 +39,7 @@ make backup@schedule   # puis chaque nuit
 | Page | Contenu |
 |---|---|
 | [Sauvegardes](docs/sauvegardes.md) | ce qui est sauvegardé, rétention, commandes, vérifications |
+| [Pare-feu SMTP](docs/pare-feu.md) | e-mails sortants réservés à la prod, commandes, vérifications |
 
 ## Développement
 

@@ -42,6 +42,7 @@ make docker@schedule   # nettoyage des images Docker chaque dimanche
 | [Sauvegardes](docs/sauvegardes.md) | ce qui est sauvegardé, rétention, commandes, vérifications |
 | [Pare-feu SMTP](docs/pare-feu.md) | e-mails sortants réservés à la prod, commandes, vérifications |
 | [Images Docker](docs/docker.md) | nettoyage hebdomadaire : ce qui est gardé, commandes |
+| [Reconstruire le serveur](docs/reconstruire-le-serveur.md) | remonter un VPS neuf : système, SSH, Docker, pare-feu, GitHub, DNS, puis `/srv` |
 
 ## Développement
 

@@ -30,6 +30,7 @@ make backup@run        # première sauvegarde
 make backup@schedule   # puis chaque nuit
 make firewall@install  # SMTP sortant réservé aux instances de prod
 make firewall@test
+make docker@schedule   # nettoyage des images Docker chaque dimanche
 ```
 
 `make` sans argument liste toutes les commandes disponibles.
@@ -40,6 +41,7 @@ make firewall@test
 |---|---|
 | [Sauvegardes](docs/sauvegardes.md) | ce qui est sauvegardé, rétention, commandes, vérifications |
 | [Pare-feu SMTP](docs/pare-feu.md) | e-mails sortants réservés à la prod, commandes, vérifications |
+| [Images Docker](docs/docker.md) | nettoyage hebdomadaire : ce qui est gardé, commandes |
 
 ## Développement
 

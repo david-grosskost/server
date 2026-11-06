@@ -30,6 +30,13 @@ BACKUP_CACHE_DIR="data/restic-cache"
 # systemd service and timer of the nightly backup (make backup@schedule).
 BACKUP_UNIT="srv-backup"
 
+# Docker images clean-up (make docker@*), see docs/docker.md. Per image
+# repository, the most recent tags are kept (the version in service and the
+# previous one, for a rollback), besides every image a container uses.
+DOCKER_KEEP="${DOCKER_KEEP:-2}"
+# systemd service and timer of the weekly clean-up (make docker@schedule).
+DOCKER_UNIT="srv-docker-prune"
+
 # Outgoing SMTP firewall (make firewall@*), see docs/pare-feu.md. Every
 # container is refused the SMTP ports, except those of the smtp-out network,
 # which only the prod instances join (their compose.prod.yaml).

@@ -29,6 +29,9 @@ BACKUP_DUMP_DIR="data/dumps"
 BACKUP_CACHE_DIR="data/restic-cache"
 # systemd service and timer of the nightly backup (make backup@schedule).
 BACKUP_UNIT="srv-backup"
+# Alert of the nightly backup (make backup@alert): its secret Healthchecks.io
+# ping URL. Absent: no alert, the backup runs as before.
+BACKUP_PING_FILE="secrets/healthcheck-backup"
 
 # Docker images clean-up (make docker@*), see docs/docker.md. Per image
 # repository, the most recent tags are kept (the version in service and the
@@ -101,4 +104,18 @@ restic_run () {
     -e RESTIC_CACHE_DIR=/cache \
     "${RESTIC_DOCKER_ARGS[@]}" \
     "$RESTIC_IMAGE" "$@"
+}
+
+# Sends a signal to a Healthchecks.io check, whose ping URL is in a file.
+# Never fails the caller: a monitoring outage must not stop a backup.
+#
+# @param string $1 File holding the ping URL (skipped if missing)
+# @param string $2 Signal: "" (success), /start or /fail
+# @param string $3 Text sent with it (shown in the alert), may be empty
+healthcheck_ping () {
+  local url
+  [ -f "$1" ] || return 0
+  url="$(head -n 1 "$1")"
+  curl -fsS -m 10 --retry 3 -o /dev/null --data-raw "${3:-}" "$url$2" \
+    || info "Alerte : signal $2 non envoyé (Healthchecks.io injoignable), la sauvegarde continue."
 }

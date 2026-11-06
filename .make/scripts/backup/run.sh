@@ -15,6 +15,11 @@
 # Retention applies to each tag on its own: pre-deploy snapshots never push
 # nightly ones out, nor the reverse.
 #
+# The nightly run signals Healthchecks.io (make backup@alert): start, then
+# success or failure with the end of its log. No signal for 25 hours, or a
+# failure, sends the alert. The pre-deploy runs send nothing: their success
+# must not hide a missed night.
+#
 # @usage make backup@run [BACKUP_TAG=pre-deploy] [BACKUP_MAINTENANCE=0]
 set -euo pipefail
 . "$(dirname "$0")/../lib.sh"
@@ -49,6 +54,26 @@ umask 002
 mkdir -p "$BACKUP_DUMP_DIR"
 [ -w "$BACKUP_DUMP_DIR" ] \
   || die "backup@run : $BACKUP_DUMP_DIR non modifiable par $(id -un) → make backup@init (partage data/ avec le groupe docker)"
+
+# Nightly run: signals to Healthchecks.io, and the log for the failure alert.
+if [ "$BACKUP_TAG" = nightly ] && [ -f "$BACKUP_PING_FILE" ]; then
+  log="$(mktemp)"
+  exec > >(tee "$log") 2>&1
+  # Status of the script, then the end of its log, sent as the alert text.
+  # shellcheck disable=SC2329 # called by the trap
+  on_exit () {
+    local status=$1
+    if [ "$status" = 0 ]; then
+      healthcheck_ping "$BACKUP_PING_FILE" "" "$(tail -n 5 "$log")"
+    else
+      healthcheck_ping "$BACKUP_PING_FILE" /fail "Échec (code $status) :
+$(tail -n 30 "$log")"
+    fi
+    rm -f "$log"
+  }
+  trap 'on_exit $?' EXIT
+  healthcheck_ping "$BACKUP_PING_FILE" /start ""
+fi
 
 started="$(date +%s)"
 printf '\n  Sauvegarde de %s (%s)\n\n' "$BACKUP_SOURCE" "$(date '+%F %T')"

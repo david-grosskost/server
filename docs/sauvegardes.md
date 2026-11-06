@@ -63,6 +63,7 @@ Les autres sont supprimées, puis le dépôt est vérifié (`restic check`).
 | `make backup@snapshots` | liste les sauvegardes et la taille du dépôt |
 | `make backup@schedule` | programme la sauvegarde chaque nuit (timer systemd `srv-backup`, demande `sudo`) |
 | `make backup@logs` | journal des dernières sauvegardes et date de la prochaine |
+| `make backup@alert` | met en place l'alerte (adresse Healthchecks.io), voir plus bas ; relancer pour la changer, vide pour la retirer |
 | `make backup@restore INSTANCE=<instance> [SNAPSHOT=<id>]` | remet une instance SuiteCRM dans l'état d'une sauvegarde (par défaut la dernière), voir plus bas |
 
 ## Restaurer une instance
@@ -95,6 +96,26 @@ la remettra à jour.
 illisibles**, y compris pour toi. Copie-le dans ton gestionnaire de mots de passe
 dès `make backup@init`, et ne le colle jamais dans un chat ni dans un dépôt.
 
+## L'alerte
+
+Une sauvegarde nocturne ratée ne doit pas passer inaperçue. Chaque nuit, `backup@run`
+envoie un signal à [Healthchecks.io](https://healthchecks.io) : « début », puis
+« succès », ou « échec » avec la fin de son journal. Tu reçois un e-mail (ou une
+notification sur ton téléphone) si une sauvegarde échoue, mais aussi **si aucun signal
+n'arrive** : serveur éteint, timer cassé, disque plein. Les sauvegardes d'avant
+déploiement n'envoient rien : leur succès ne doit pas masquer une nuit ratée.
+
+Mise en place, une fois :
+
+1. Sur healthchecks.io, créer un compte, puis un contrôle `srv-backup` :
+   **Period 1 day**, **Grace 1 hour**. Copier son adresse de signal (« Ping URL »).
+2. Sur le serveur : `make backup@alert`, coller l'adresse (elle ne s'affiche pas). Elle
+   est rangée dans `secrets/healthcheck-backup`, lisible par l'utilisateur seul, jamais
+   dans le dépôt. Un signal de test est envoyé : le contrôle passe au vert.
+
+Sans ce fichier, les sauvegardes tournent comme avant, sans alerte. Si Healthchecks.io
+est injoignable, la sauvegarde continue (le signal manquant déclenchera l'alerte).
+
 ## Limite actuelle
 
 Les sauvegardes sont sur le même disque que le serveur : elles protègent d'une
@@ -105,6 +126,7 @@ serveur. Une copie hors du serveur (stockage objet) est prévue plus tard.
 
 ```bash
 make backup@logs        # la dernière sauvegarde a-t-elle réussi ? quand est la prochaine ?
+                        # et sur healthchecks.io : le contrôle srv-backup est-il vert ?
 make backup@snapshots   # une sauvegarde par nuit ?
 df -h /srv              # reste-t-il de la place sur le disque ?
 ```

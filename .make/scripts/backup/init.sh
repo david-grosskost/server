@@ -43,6 +43,9 @@ cat <<MSG
   Copie-le dans ton gestionnaire de mots de passe (jamais dans un chat ni un dépôt) :
     cat $PWD/$BACKUP_PASSWORD_FILE
 
-  Ensuite : make backup@run (première sauvegarde), puis make backup@schedule (chaque nuit).
-
 MSG
+# Run alone: what comes next. make app@install does it right after.
+if [ -z "${APP_INSTALL:-}" ]; then
+  info "Ensuite : make backup@run (première sauvegarde), puis make backup@schedule (chaque nuit)."
+  printf '\n'
+fi

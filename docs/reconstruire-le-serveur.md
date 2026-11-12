@@ -144,18 +144,13 @@ git clone https://github.com/david-grosskost/reverse-proxy.git /srv/reverse-prox
 cd /srv/reverse-proxy && make app@install APP_ENV=prod   # demande les identifiants OVH
 
 git clone https://github.com/david-grosskost/server.git /srv/server
-cd /srv/server
-install -d -m 700 secrets
-( umask 077 && read -r -s -p "Mot de passe restic : " p && printf '%s\n' "$p" > secrets/restic-password ); echo
-make backup@init        # garde ce mot de passe ; crée le dépôt s'il n'existe pas
-make backup@schedule
-make backup@alert       # l'adresse Healthchecks.io
-make firewall@install && make firewall@test
-make docker@schedule
+cd /srv/server && make app@install
 ```
 
-Remettre le mot de passe restic **avant** `make backup@init` : sinon un nouveau est
-généré, et une copie des anciennes sauvegardes ne serait plus lisible.
+`make app@install` demande l'adresse Healthchecks.io, et le mot de passe restic quand les
+anciennes sauvegardes ont été remises dans `/srv/backups/restic` **avant** de le lancer :
+elles restent alors lisibles. Sans dépôt existant, un nouveau mot de passe est généré :
+le copier dans le gestionnaire de mots de passe.
 
 ## 9. Les instances SuiteCRM
 

@@ -25,13 +25,15 @@ restic tourne dans Docker, dans une version fixée : rien d'autre à installer.
 sudo mkdir -p /srv/server && sudo chown "$USER": /srv/server
 git clone https://github.com/<compte>/server.git /srv/server
 cd /srv/server
-make backup@init       # mot de passe + dépôt restic
-make backup@run        # première sauvegarde
-make backup@schedule   # puis chaque nuit
-make firewall@install  # SMTP sortant réservé aux instances de prod
-make firewall@test
-make docker@schedule   # nettoyage des images Docker chaque dimanche
+make app@install
 ```
+
+`make app@install` enchaîne tout, et se relance sans risque (ce qui existe est gardé) :
+mot de passe et dépôt restic (`backup@init`), adresse de l'alerte Healthchecks.io
+(`backup@alert`, Entrée pour passer), première sauvegarde (`backup@run`), sauvegarde
+chaque nuit (`backup@schedule`), pare-feu SMTP (`firewall@install`, `firewall@test`) et
+nettoyage des images Docker chaque dimanche (`docker@schedule`). Si un dépôt restic est
+déjà là (reconstruction), il demande son mot de passe au lieu d'en générer un.
 
 `make` sans argument liste toutes les commandes disponibles.
 

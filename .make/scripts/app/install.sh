@@ -43,6 +43,9 @@ MSG
   info "Mot de passe vérifié : les anciennes sauvegardes sont lisibles."
 fi
 
+# Tells the scripts below that this command runs the next steps itself.
+export APP_INSTALL=1
+
 "$SCRIPTS/backup/init.sh"
 
 # Before the first backup, so that it already sends its signal.
